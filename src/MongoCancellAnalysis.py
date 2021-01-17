@@ -1,28 +1,33 @@
 from pymongo import MongoClient
 import pandas as pd
 import openpyxl
+import time
 
 
 class MongoCancellAnalysis():
 
-    def __init__(self, month, database):
-        self.month = month
+    def __init__(self, statistic_type, year, database):
+        # self.month = month
+        self.year = year
+        self.statistic_type = statistic_type
         self.type = ''
         self.myquery = {"CANCELLED": 1}
         self.cancelled = database.find(self.myquery)
         self.df_cancelled = pd.DataFrame()
-        self.df_month = pd.DataFrame()
+        self.df_data = pd.DataFrame()
         self.prepare_data()
+
+    def get_month_data(self):
+        date = "{}-{}-".format(self.year, self.statistic_type)
+        # print(self.df_cancelled.value_counts().iloc[:20])
+        return self.df_cancelled[self.df_cancelled['FL_DATE'].str.contains(date)]
 
     def prepare_data(self):
         self.df_cancelled = pd.DataFrame.from_dict(self.cancelled, orient='columns')
-        self.df_month = self.get_month_data(self.month)
-
-    def get_month_data(self, month):
-        if 'january' == month.lower():
-            return self.df_cancelled[self.df_cancelled['FL_DATE'].str.contains("2011-01-")]
-        elif 'february' == month.lower():
-            return self.df_cancelled[self.df_cancelled['FL_DATE'].str.contains("2011-02-")]
+        if self.statistic_type == 'year':
+            self.df_data = self.df_cancelled
+        else:
+            self.df_data = self.get_month_data()
 
     def find_cancellations(self, name, cancellations_found):
         name = name.split('_', 1)
@@ -65,21 +70,21 @@ class MongoCancellAnalysis():
                 cancelled_routes = df.value_counts(['ORIGIN', 'DEST']).iloc[-20:]
 
         df_cancelled_routes = cancelled_routes.to_frame().reset_index()
-        df_cancelled_routes.columns = [[name, name, name], ['ORIGIN', 'DEST', 'count']]
+        df_cancelled_routes.columns = [[name, name, name], ['FROM', 'DEST', 'count']]
 
         return df_cancelled_routes
 
-    def get_month_statistics(self, type):
+    def get_statistics(self, type):
         self.type = type
 
-        often_origin_cancelled = self.find_often_cancellations(self.df_month['ORIGIN'], 'OFTEN CANCELLED_FROM')
-        often_dest_cancelled = self.find_often_cancellations(self.df_month['DEST'], 'OFTEN CANCELLED_DEST')
+        often_origin_cancelled = self.find_often_cancellations(self.df_data['ORIGIN'], 'OFTEN CANCELLED_FROM')
+        often_dest_cancelled = self.find_often_cancellations(self.df_data['DEST'], 'OFTEN CANCELLED_DEST')
 
-        least_origin_cancelled = self.find_least_cancellations(self.df_month['ORIGIN'], 'LEAST CANCELLED_FROM')
-        least_dest_cancelled = self.find_least_cancellations(self.df_month['DEST'], 'LEAST CANCELLED_DEST')
+        least_origin_cancelled = self.find_least_cancellations(self.df_data['ORIGIN'], 'LEAST CANCELLED_FROM')
+        least_dest_cancelled = self.find_least_cancellations(self.df_data['DEST'], 'LEAST CANCELLED_DEST')
 
-        often_route_cancelled = self.find_route_cancellations(self.df_month, 'OFTEN CANCELLED_ROUTE')
-        least_route_cancelled = self.find_route_cancellations(self.df_month, 'LEAST CANCELLED_ROUTE')
+        often_route_cancelled = self.find_route_cancellations(self.df_data, 'OFTEN CANCELLED_ROUTE')
+        least_route_cancelled = self.find_route_cancellations(self.df_data, 'LEAST CANCELLED_ROUTE')
 
         df = pd.concat([
             often_route_cancelled, least_route_cancelled,
@@ -90,14 +95,14 @@ class MongoCancellAnalysis():
         return df
 
     def create_statistics(self):
-        num_of_cancelled = self.df_month.shape[0]
-        df_info = pd.DataFrame([['Month', 'Number of all cancellations'],
-                                [self.month, num_of_cancelled]])
+        num_of_cancelled = self.df_data.shape[0]
+        df_info = pd.DataFrame([[self.statistic_type, 'Number of all cancellations'],
+                                [self.statistic_type, num_of_cancelled]])
 
-        df_concat_part = self.get_month_statistics('part')
-        df_concat_all = self.get_month_statistics('all')
+        df_concat_part = self.get_statistics('part')
+        df_concat_all = self.get_statistics('all')
 
-        with pd.ExcelWriter('statistics/airline_cancellations_analysis_{}.xlsx'.format(self.month)) as writer:
+        with pd.ExcelWriter('statistics/airline_cancellations_analysis_{}_{}.xlsx'.format(self.statistic_type, self.year)) as writer:
             df_concat_part.to_excel(writer, sheet_name='The most-least cancelled', index=True)
             df_concat_all.to_excel(writer, sheet_name='All Cancelled', index=True)
             df_info.to_excel(writer, sheet_name='Information', index=False)
@@ -107,11 +112,17 @@ client = MongoClient('localhost', 27017)
 db = client['flights']
 
 air10 = db['air10']
-air11 = db['air11']
-air12 = db['air12']
+# air11 = db['air11']
+air18 = db['air18']
 
-january_analysis = MongoCancellAnalysis('January', air11)
+air11 = db['airline11']
+
+start_time = time.time()
+january_analysis = MongoCancellAnalysis('01', '2018', air18)
 january_analysis.create_statistics()
+print("--- %s seconds ---" % (time.time() - start_time))
 
-february_analysis = MongoCancellAnalysis('February', air11)
-february_analysis.create_statistics()
+start_time = time.time()
+analysis_2011 = MongoCancellAnalysis('year', '2018', air18)
+analysis_2011.create_statistics()
+print("--- %s seconds ---" % (time.time() - start_time))
