@@ -3,14 +3,15 @@ import pandas as pd
 import openpyxl
 
 
-class MongoAnalysis():
+class MongoCancellAnalysis():
 
-    def __init__(self, month, database, type):
+    def __init__(self, month, database):
         self.month = month
-        self.type = type
+        self.type = ''
         self.myquery = {"CANCELLED": 1}
-        self.cancelled = air11.find(self.myquery)
-
+        self.cancelled = database.find(self.myquery)
+        self.df_cancelled = pd.DataFrame()
+        self.df_month = pd.DataFrame()
         self.prepare_data()
 
     def prepare_data(self):
@@ -31,6 +32,7 @@ class MongoAnalysis():
         return df_cancellations_found
 
     def find_often_cancellations(self, df, name):
+        cancellations_found = pd.DataFrame()
         if self.type == 'all':
             cancellations_found = df.value_counts()
         elif self.type == 'part':
@@ -41,6 +43,7 @@ class MongoAnalysis():
         return df_cancellations_found
 
     def find_least_cancellations(self, df, name):
+        cancellations_found = pd.DataFrame()
         if self.type == 'all':
             cancellations_found = df.value_counts()
         elif self.type == 'part':
@@ -66,11 +69,8 @@ class MongoAnalysis():
 
         return df_cancelled_routes
 
-    def get_month_statistics(self):
-
-        num_of_cancelled = self.df_month.shape[0]
-        df_info = pd.DataFrame([['Month', 'Number of all cancellations'],
-                                [self.month, num_of_cancelled]])
+    def get_month_statistics(self, type):
+        self.type = type
 
         often_origin_cancelled = self.find_often_cancellations(self.df_month['ORIGIN'], 'OFTEN CANCELLED_FROM')
         often_dest_cancelled = self.find_often_cancellations(self.df_month['DEST'], 'OFTEN CANCELLED_DEST')
@@ -81,28 +81,25 @@ class MongoAnalysis():
         often_route_cancelled = self.find_route_cancellations(self.df_month, 'OFTEN CANCELLED_ROUTE')
         least_route_cancelled = self.find_route_cancellations(self.df_month, 'LEAST CANCELLED_ROUTE')
 
-        columns = [['OFTEN_CANCELLED', 'OFTEN_CANCELLED', 'OFTEN_CANCELLED', 'OFTEN_CANCELLED',
-                    'LEAST_CANCELLED', 'LEAST_CANCELLED', 'LEAST_CANCELLED', 'LEAST_CANCELLED'
-                    # 'OFTEN_CANCELLED_FROM', 'count', 'OFTEN_CANCELLED_DEST', 'count',
-                    # 'LEAST_CANCELLED_FROM', 'count', 'LEAST_CANCELLED_DEST', 'count']
-                                                                             'OFTEN_CANCELLED_ROUTE',
-                    'OFTEN_CANCELLED_ROUTE', 'OFTEN_CANCELLED_ROUTE'
-                                             'LEAST_CANCELLED_ROUTE', 'OFTEN_CANCELLED_ROUTE', 'OFTEN_CANCELLED_ROUTE']]
-
         df = pd.concat([
             often_route_cancelled, least_route_cancelled,
             often_origin_cancelled, often_dest_cancelled,
             least_origin_cancelled, least_dest_cancelled,
         ], axis=1)
 
-        # df.reset_index()
+        return df
 
-        # print(df)
-        # print(df_info)
-        with pd.ExcelWriter('airline_analysis_{}_{}.xlsx'.format(self.month, self.type)) as writer:
-            df.to_excel(writer, sheet_name='Analysis', index=True)
-            # often_route_cancelled.to_excel(writer, sheet_name='Analysis', index=True, startcol=10)
-            # least_route_cancelled.to_excel(writer, sheet_name='Analysis', index=True, startcol=26)
+    def create_statistics(self):
+        num_of_cancelled = self.df_month.shape[0]
+        df_info = pd.DataFrame([['Month', 'Number of all cancellations'],
+                                [self.month, num_of_cancelled]])
+
+        df_concat_part = self.get_month_statistics('part')
+        df_concat_all = self.get_month_statistics('all')
+
+        with pd.ExcelWriter('statistics/airline_cancellations_analysis_{}.xlsx'.format(self.month)) as writer:
+            df_concat_part.to_excel(writer, sheet_name='The most-least cancelled', index=True)
+            df_concat_all.to_excel(writer, sheet_name='All Cancelled', index=True)
             df_info.to_excel(writer, sheet_name='Information', index=False)
 
 
@@ -113,5 +110,8 @@ air10 = db['air10']
 air11 = db['air11']
 air12 = db['air12']
 
-analysis = MongoAnalysis('January', air11, 'part')
-analysis.get_month_statistics()
+january_analysis = MongoCancellAnalysis('January', air11)
+january_analysis.create_statistics()
+
+february_analysis = MongoCancellAnalysis('February', air11)
+february_analysis.create_statistics()
