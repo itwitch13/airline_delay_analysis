@@ -4,7 +4,7 @@ import openpyxl
 import time
 
 
-class MongoCancellAnalysis():
+class MongoCancellAnalysis:
 
     def __init__(self, statistic_type, year, database):
         # self.month = month
@@ -19,7 +19,7 @@ class MongoCancellAnalysis():
 
     def get_month_data(self):
         date = "{}-{}-".format(self.year, self.statistic_type)
-        # print(self.df_cancelled.value_counts().iloc[:20])
+
         return self.df_cancelled[self.df_cancelled['FL_DATE'].str.contains(date)]
 
     def prepare_data(self):
@@ -112,7 +112,6 @@ client = MongoClient('localhost', 27017)
 db = client['flights']
 
 air10 = db['air10']
-# air11 = db['air11']
 air18 = db['air18']
 
 air11 = db['airline11']

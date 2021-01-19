@@ -24,7 +24,7 @@ airlines = {'UA': 'United Airlines',
             'DL': 'Delta Airlines'}
 
 
-class MongoCancellAnalysis():
+class MongoCancellAnalysis:
 
     def __init__(self, statistic_type, year, database):
         self.year = year
@@ -60,21 +60,32 @@ class MongoCancellAnalysis():
 
         return df_delayed_airlines
 
+    def calculate_percentage(self, df):
+        percentages = []
+        for i in range(df.shape[0]):
+            percentages.append((df.iloc[i]['Number of delayed flights']/df.iloc[i]['Number of flights'])*100)
+        df['Percentage %'] = percentages
+        return df
+
     def get_statistics(self, type):
         self.type = type
 
         df_delayed_airlines = self.find_amount_of_delayed_airlines(self.df_data)
         df_delayed_airlines['Airlines'].replace(airlines, inplace=True)
+        df_delayed_airlines = df_delayed_airlines.sort_values('Airlines').reset_index()
 
-        print(df_delayed_airlines)
-        print(df_airlines_flights)
+        df = pd.concat([df_delayed_airlines['Airlines'],df_delayed_airlines['Number of delayed flights'],
+                        df_airlines_flights['Number of flights']], axis=1, ignore_index=False)
 
-        df = pd.concat([df_delayed_airlines, df_airlines_flights], axis=1)
-
+        # df['Percentage %'] = df.apply(lambda row: self.percentage(
+        #     df['Number of delayed flights'], df['Number of flights']))
+        df = self.calculate_percentage(df)
+        print(df)
         return df
 
     def create_statistics(self):
         df_airlines_part_stat = self.get_statistics('part')
+        df_airlines_part_stat = df_airlines_part_stat.sort_values('Percentage %')
 
         with pd.ExcelWriter('statistics/airline_delayed_analysis_{}_{}.xlsx'.format(self.statistic_type, self.year)) as writer:
             df_airlines_part_stat.to_excel(writer, sheet_name='Airlines - number of delayed', index=True)
