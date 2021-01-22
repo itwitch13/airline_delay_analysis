@@ -31,8 +31,8 @@ data = {}
 for key in airlines:
     print(key, airlines[key])
     myquery = {'OP_CARRIER': key}
-    delayed = air18.find(myquery)
-    counted = delayed.count()
+    flights = air18.find(myquery)
+    counted = flights.count()
     data[airlines[key]] = counted
 
 print(data)
