@@ -102,7 +102,7 @@ class MongoCancelAnalysis:
         df_concat_part = self.get_statistics('part')
         df_concat_all = self.get_statistics('all')
 
-        with pd.ExcelWriter('statistics/airline_cancellations_analysis_{}_{}.xlsx'.format(self.statistic_type, self.year)) as writer:
+        with pd.ExcelWriter('mongo_statistics/mongo_airline_cancellations_analysis_{}_{}.xlsx'.format(self.statistic_type, self.year)) as writer:
             df_concat_part.to_excel(writer, sheet_name='The most-least cancelled', index=True)
             df_concat_all.to_excel(writer, sheet_name='All Cancelled', index=True)
             df_info.to_excel(writer, sheet_name='Information', index=False)

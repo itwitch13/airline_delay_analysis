@@ -69,7 +69,7 @@ class MongoDelayAnalysis:
         df_airlines_part_stat = self.get_statistics('part')
         df_airlines_part_stat = df_airlines_part_stat.sort_values('Percentage %')
 
-        with pd.ExcelWriter('statistics/airline_delayed_analysis_{}_{}.xlsx'.format(self.statistic_type, self.year)) as writer:
+        with pd.ExcelWriter('mongo_statistics/mongo_airline_delay_analysis_{}_{}.xlsx'.format(self.statistic_type, self.year)) as writer:
             df_airlines_part_stat.to_excel(writer, sheet_name='Airlines - number of delayed', index=True)
 
 
