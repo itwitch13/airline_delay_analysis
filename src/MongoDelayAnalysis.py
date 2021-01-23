@@ -3,28 +3,10 @@ import pandas as pd
 import openpyxl
 import time
 from src.AirlinesFlights import df_airlines_flights
-
-airlines = {'UA': 'United Airlines',
-            'AS': 'Alaska Airlines',
-            '9E': 'Endeavor Air',
-            'B6': 'JetBlue Airways',
-            'EV': 'ExpressJet',
-            'F9': 'Frontier Airlines',
-            'G4': 'Allegiant Air',
-            'HA': 'Hawaiian Airlines',
-            'MQ': 'Envoy Air',
-            'NK': 'Spirit Airlines',
-            'OH': 'PSA Airlines',
-            'OO': 'SkyWest Airlines',
-            'VX': 'Virgin America',
-            'WN': 'Southwest Airlines',
-            'YV': 'Mesa Airline',
-            'YX': 'Republic Airways',
-            'AA': 'American Airlines',
-            'DL': 'Delta Airlines'}
+from src.airlines_data import airlines
 
 
-class MongoCancellAnalysis:
+class MongoDelayAnalysis:
 
     def __init__(self, statistic_type, year, database):
         self.year = year
@@ -99,11 +81,13 @@ air11 = db['airline11']
 air18 = db['air18']
 
 start_time = time.time()
-analysis = MongoCancellAnalysis('01', '2018', air18)
+# analysis = MongoDelayAnalysis('01', '2018', air18)
+analysis = MongoDelayAnalysis('year', '2018', air18)
+
 analysis.create_statistics()
-print("--- %s seconds ---" % (time.time() - start_time))
+print("--- {} seconds ---".format(time.time() - start_time))
 
 # start_time = time.time()
-# january_analysis = MongoCancellAnalysis('01', '2018', air18)
+# january_analysis = MongoDelayAnalysis('01', '2018', air18)
 # january_analysis.create_statistics()
 # print("--- %s seconds ---" % (time.time() - start_time))

@@ -4,7 +4,7 @@ import openpyxl
 import time
 
 
-class MongoCancellAnalysis:
+class MongoCancelAnalysis:
 
     def __init__(self, statistic_type, year, database):
         # self.month = month
@@ -117,11 +117,11 @@ air18 = db['air18']
 air11 = db['airline11']
 
 start_time = time.time()
-january_analysis = MongoCancellAnalysis('01', '2018', air18)
+january_analysis = MongoCancelAnalysis('01', '2018', air18)
 january_analysis.create_statistics()
 print("--- %s seconds ---" % (time.time() - start_time))
 
 start_time = time.time()
-analysis_2011 = MongoCancellAnalysis('year', '2018', air18)
+analysis_2011 = MongoCancelAnalysis('year', '2018', air18)
 analysis_2011.create_statistics()
 print("--- %s seconds ---" % (time.time() - start_time))
