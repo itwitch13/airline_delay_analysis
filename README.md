@@ -3,9 +3,9 @@ An analysis of data on airline delays. The data used comes from the website www.
 Dataset link: https://www.kaggle.com/sherrytp/airline-delay-analysis
 
 The data was analyzed in terms of, among others:
-● the largest number of canceled flights (in a month / year) according to the place of departure and arrival of the aircraft, and also on the basis of the route (the most frequently canceled aircraft routes)
-● the smallest number of canceled flights (in a month / year) according to the place of departure and arrival of the aircraft, and also on the basis of the route (the most canceled aircraft routes)
-● flight delays (including calculation of delayed travel statistics for each airline)
+- the largest number of canceled flights (in a month / year) according to the place of departure and arrival of the aircraft, and also on the basis of the route (the most frequently canceled aircraft routes)
+- the smallest number of canceled flights (in a month / year) according to the place of departure and arrival of the aircraft, and also on the basis of the route (the most canceled aircraft routes)
+- flight delays (including calculation of delayed travel statistics for each airline)
 
 The following databases were used to handle the data:
 Non-relational: MongoDB, Neo4j
